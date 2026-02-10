@@ -1,0 +1,10 @@
+# Ignore data files
+*.csv
+*.xlsx
+*.xls
+data/
+
+# Ignore system/python junk
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

@@ -1,0 +1,22 @@
+name: fresh_test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - geopandas
+  - shapely
+  - pyproj
+  - pyogrio
+  - pyarrow
+  - pandas
+  - numpy
+  - xarray
+  - matplotlib
+  - openpyxl
+  - ipykernel
+  - ipywidgets
+  - pip
+  - pip:
+      - s2cell
+

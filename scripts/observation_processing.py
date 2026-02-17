@@ -29,7 +29,7 @@ def assign_date(dataset:gpd.GeoDataFrame):
 def yield_process(column,current_unit):
     """
     Normalize the Yield column units to ton/ha
-    
+    allowed_units = 'centner/ha','ton/ha','quintal/ha','kilogram/ha'
     """
     allowed_units = {'centner/ha','ton/ha','quintal/ha','kilogram/ha'}
     if current_unit not in allowed_units:

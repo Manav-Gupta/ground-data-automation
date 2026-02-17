@@ -97,7 +97,7 @@ database_dtypes = {
 }
 
 target_schema_grouped = {
-    "General": ["Crop", "Variety", "Season_id", "Geom_id", "Soil_Type", "Provider", "Src_id", "Src_File", "Crop_Group", "Crop_Season", "Crop_Variation","geometry","Src_Id"],
+    "General": ["Crop", "Variety", "Season_id", "Geom_id", "Soil_Type", "Provider", "Src_id", "Src_File", "Crop_Group", "Crop_Season", "Crop_Variation","geometry"],
     
     "Sowing": ["Sow_Date", "Sow_Amount", "Sow_Rate", "Sow_Rate_Unit", "Sow_Depth", "Sow_Row_Spacing", "Sow_Speed", "Sow_Method", "Sow_Amount_Unit", 
                "Est_Sow_Year", "Sow_Day", "Sow_Month", "Sow_Year", "Sow_End_Date", "Sow_End_Day", "Sow_End_Month", "Sow_End_Year"],

@@ -253,7 +253,7 @@ for group_name, group_info in utils.group_codes.items():
 def crop_type_preprocess(dataset:pd.DataFrame,crop_column:str):
     data_ct = dataset.rename(columns={f"{crop_column}":"Crop_unprocessed"})
     ct_column = "Crop_unprocessed"
-    data_ct = scripts.crop_type.remove_null_ct(ct_column_name = ct_column, dataset = data_ct)  
+    #data_ct = scripts.crop_type.remove_null_ct(ct_column_name = ct_column, dataset = data_ct)  
     #getting the crops list to create group, variation and season columns
     crops_list = data_ct[ct_column].apply(scripts.crop_type.map_variations,
                                                  dict_variations = utils.crop_variations).str.split(",")  

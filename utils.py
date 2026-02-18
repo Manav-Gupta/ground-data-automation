@@ -97,10 +97,12 @@ database_dtypes = {
 }
 
 target_schema_grouped = {
-    "General": ["Crop", "Variety", "Season_id", "Geom_id", "Soil_Type", "Provider", "Src_id", "Src_File", "Crop_Group", "Crop_Season", "Crop_Variation","geometry"],
+    "Essential": ["Crop", "Season_id", "Geom_id", "geometry", "Est_Sow_Year", "Sow_Year", "Src_id", "Provider", "Src_File"],
     
+    "Crop": ["Variety", "Crop_Group", "Crop_Season", "Crop_Variation"],
+        
     "Sowing": ["Sow_Date", "Sow_Amount", "Sow_Rate", "Sow_Rate_Unit", "Sow_Depth", "Sow_Row_Spacing", "Sow_Speed", "Sow_Method", "Sow_Amount_Unit", 
-               "Est_Sow_Year", "Sow_Day", "Sow_Month", "Sow_Year", "Sow_End_Date", "Sow_End_Day", "Sow_End_Month", "Sow_End_Year"],
+                 "Sow_Day", "Sow_Month",  "Sow_End_Date", "Sow_End_Day", "Sow_End_Month", "Sow_End_Year"],
     
     "Harvest": ["Harvest_Date", "Yield", "Production", "Harvest_Day", "Harvest_Month", "Harvest_Year", 
                 "Harvest_End_Date", "Harvest_End_Day", "Harvest_End_Month", "Harvest_End_Year"],
@@ -117,7 +119,119 @@ target_schema_grouped = {
                    "Protect_Rate_Min", "Protect_Rate_Max", "Protect_Machine_Tasks", "Protect_Implements",
                    "Protect_Day", "Protect_Month", "Protect_Year", "Protect_End_Date", "Protect_End_Month", "Protect_End_Year"],
     
-    "Soil/Env": ["Soil_Temp", "Soil_Moist(70mm)", "Soil_Moist(280mm)", "Soil_Moist(1000mm)"]
+    "Soil/Env": ["Soil_Type", "Soil_Temp", "Soil_Moist(70mm)", "Soil_Moist(280mm)", "Soil_Moist(1000mm)"]
+}
+
+target_schema_grouped_temp = {
+    "Essential": ["Crop", "Season_id", "Geom_id", "geometry", "Est_Sow_Year", "Sow_Year", "Src_id", "Provider", "Src_File"],
+    
+    "Crop": ["Variety", "Crop_Group", "Crop_Season", "Crop_Variation"],
+        
+    "Sowing": ["Sow_Date", "Sow_Day", "Sow_Month"],
+    
+    "Harvest": ["Harvest_Date", "Yield"]
+}
+
+target_schema_grouped_temp = {
+    "Essential Columns": {
+        "Geom_id": {
+            "description": "Unique field identifier for each geometry.",
+            "dtype": "string",
+            "required": True
+        },
+        "Season_id": {
+            "description": "Unique seasonal identifier: Geom_id + Sowing information",
+            "dtype": "string",
+            "required": True
+        },
+        "Sow_Year": {
+            "description": "Sowing year of the crop",
+            "dtype": "integer",
+            "required": True
+        },
+        "Est_Sow_Year": {
+            "description": "Esimated year assigned to all the rows where Sow_Year is not available",
+            "dtype": "integer",
+            "required": True
+        },
+        "Src_id": {
+            "description": "Original field ids present in the dataset to backtrack to the raw data",
+            "dtype": "string",
+            "required": True
+        },
+        "Src_File": {
+            "description": "Paths to the original files to backtrack to the raw data",
+            "dtype": "string",
+            "required": True
+        },
+        "Provider": {
+            "description": "Provider name for creditation in the project",
+            "dtype": "string",
+            "required": True
+        },
+        "Crop": {
+            "description": "Crop type of each field",
+            "dtype": "string",
+            "required": True
+        },
+        "geometry": {
+            "description": "Crop type of each field",
+            "dtype": "geometry",
+            "required": True
+        },
+        
+    },
+    "Crop Columns": {
+        "Variety": {
+            "description": "Variety of the crop (durum,spelt,etc)",
+            "dtype": "string",
+            "required": True
+        },
+        "Crop_Season": {
+            "description": "Cropping season label (Winter, Spring, etc.).",
+            "dtype": "string",
+            "required": False
+        },
+        "Crop_Group": {
+            "description": "Cropping group label (Oilseeds, Cereals, etc.).",
+            "dtype": "string",
+            "required": False
+        },
+        "Crop_Variation": {
+            "description": "Cropping variation label (Silage, Ratoon, etc.).",
+            "dtype": "string",
+            "required": False
+        }, 
+    },
+    "Sow Columns": {
+        "Sow_Date": {
+            "description": "Sowing date of the crop",
+            "dtype": "datetime",
+            "required": False
+        },
+        "Sow_Day": {
+            "description": "Sowing day of the crop",
+            "dtype": "integer",
+            "required": False
+        },
+        "Sow_Month": {
+            "description": "Sowing month of the crop",
+            "dtype": "integer",
+            "required": False
+        }
+    },
+    "Harvest Columns": {
+        "Harvest_Date": {
+            "description": "Harvest date of the crop",
+            "dtype": "datetime",
+            "required": False
+        },
+        "Yield": {
+            "description": "Yield of the crop in ton/ha",
+            "dtype": "float",
+            "required": False
+        }
+}
 }
 #                                                                                                                              
 #database_schema = {

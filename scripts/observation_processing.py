@@ -53,26 +53,33 @@ def yield_process(column,current_unit):
 
 def build_season_id(row):
     """Build season_id for a single row."""
-    if pd.isna(row["Sow_Year"]):
-        # Case: no sowing year, use estimated year
-        return f"{row["Geom_id"]}-{int(row["Est_Sow_Year"])}_EST"
+    geom_id = row.get("Geom_id")
     
-    parts = [str(row["Geom_id"]), str(int(row["Sow_Year"]))]
-    if not pd.isna(row["Sow_Month"]):
-        if(row["Sow_Month"] < 10):
-            parts.append(f"0{int(row["Sow_Month"])}")
-        else:
-            parts.append(f"{int(row["Sow_Month"])}")
-    if not pd.isna(row["Sow_Day"]):
-        if(row["Sow_Day"] < 10):
-            parts.append(f"0{int(row["Sow_Day"])}")
-        else:
-            parts.append(f"{int(row["Sow_Day"])}")
+    if pd.isna(row.get("Sow_Year")):
+        est_year = row.get("Est_Sow_Year")
+        
+        if pd.isna(est_year):
+            return None
+        
+        return f"{geom_id}-{int(est_year)}_EST"
+    
+    parts = [str(geom_id), str(int(row["Sow_Year"]))]
+    
+    if not pd.isna(row.get("Sow_Month")):
+        parts.append(f"{int(row['Sow_Month']):02d}")
+    
+    if not pd.isna(row.get("Sow_Day")):
+        parts.append(f"{int(row['Sow_Day']):02d}")
         
     return "-".join(parts)
 
+
 def assign_season_id(gdf: gpd.GeoDataFrame):
     """Assign Season_id column to GeoDataFrame."""
+    required = ["Geom_id","Sow_Year"]
+    missing = [col for col in required if col not in gdf.columns]
+    if missing:
+        raise ValueError(f"Missing required columns for Season_id: {missing}")
     gdf["Season_id"] = gdf.apply(build_season_id, axis=1)
     return gdf
 

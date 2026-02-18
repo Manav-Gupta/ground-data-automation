@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import Union, List, Optional, Tuple
 import scripts
 import utils
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+import pprint
 
 def read_ground_data(
     file_paths: Union[str, List[str]], 
@@ -141,9 +144,7 @@ def read_ground_data(
         return gdf
     
     
-import ipywidgets as widgets
-from IPython.display import display, clear_output
-import pprint
+
 
 class display_final_cols:
     def __init__(self, df, schema_dict):
@@ -158,6 +159,7 @@ class display_final_cols:
 
     def _build_ui(self):
         """Internal method to construct the widget interface."""
+    
         user_cols = ['(None)'] + sorted(list(self.df.columns))
         
         accordion = widgets.Accordion(children=[])
@@ -169,22 +171,47 @@ class display_final_cols:
             titles.append(category)
             rows = []
             
-            for field in fields:
+            for field_name, field_info in fields.items():
                 # Auto-match logic
                 default_val = '(None)'
                 for col in self.df.columns:
-                    if col.lower() == field.lower():
+                    if col.lower() == field_name.lower():
                         default_val = col
                         break
-                
-                # UI Elements
-                lbl = widgets.Label(value=f"{field}:", layout=widgets.Layout(width='200px'))
                 dd = widgets.Dropdown(options=user_cols, value=default_val, layout=widgets.Layout(width='300px'))
                 
-                # Save reference to widget so we can read it later
-                self.mapping_widgets[field] = dd
+                # UI Elements
+                required = field_info.get("required", False)
+                label_text = f"{field_name} *" if required else field_name
+
+                lbl = widgets.Label(
+                    value=f"{label_text}:",
+                    layout=widgets.Layout(width='200px')
+                )
                 
-                rows.append(widgets.HBox([lbl, dd], layout=widgets.Layout(margin='2px')))
+    
+                self.mapping_widgets[field_name] = dd
+                
+                required = field_info.get("required", False)
+                label_text = f"{field_name} *" if required else field_name
+                
+                field_label = widgets.HTML(
+                    f"<b>{label_text}</b> "
+                    f"<span style='color:#666; font-size:0.85em;'>"
+                    f"{field_info['description']}"
+                    f"</span>"
+                )
+                
+                row = widgets.HBox(
+                    [field_label, dd],
+                    layout=widgets.Layout(
+                        justify_content='space-between',
+                        align_items='center',
+                        margin='6px 0'
+                    )
+                )
+                
+                rows.append(row)
             
             children.append(widgets.VBox(rows, layout=widgets.Layout(padding='10px')))
 
@@ -201,7 +228,15 @@ class display_final_cols:
         btn.on_click(self._on_click)
         
         # 3. Return the full layout
-        return widgets.VBox([accordion, btn, self.output_area])
+        container = widgets.VBox(
+            [accordion, btn, self.output_area],
+            layout=widgets.Layout(
+                width='800px',
+                margin='0 auto',
+                padding='20px'
+            )
+            )
+        return container
 
     def _on_click(self, b):
         """Internal callback when button is clicked."""
@@ -221,11 +256,11 @@ class display_final_cols:
             unmapped = list(all_cols - assigned_cols)
             unmapped.sort()
             
-            print(f"✅ Successfully Mapped: {len(self.final_mapping)} columns.")
+            print(f"Successfully Mapped: {len(self.final_mapping)} columns.")
             
             if unmapped:
                 print("\n" + "="*40)
-                print(f"⚠️ UNMAPPED COLUMNS ({len(unmapped)})")
+                print(f"UNMAPPED COLUMNS ({len(unmapped)})")
                 print("The following columns from your file were NOT assigned:")
                 print("="*40)
                 
@@ -233,7 +268,34 @@ class display_final_cols:
                 pp = pprint.PrettyPrinter(indent=4, width=80, compact=True)
                 pp.pprint(unmapped)
             else:
-                print("\n🎉 Perfect! All columns in the file have been mapped.")
+                print("\nAll columns in the file have been mapped.")
+                
+            for field, widget in self.mapping_widgets.items():
+                selected_col = widget.value
+                if selected_col != '(None)':
+                    expected_dtype = self._get_field_dtype(field)
+                    actual_dtype = self.df[selected_col].dtype
+
+                    if not self._check_dtype(actual_dtype, expected_dtype):
+                        print(f"⚠ Warning: '{selected_col}' does not match expected type '{expected_dtype}'")
+    
+    def _get_field_dtype(self, field_name):
+        for category in self.schema.values():
+            if field_name in category:
+                return category[field_name].get("dtype")
+        return None
+                        
+    def _check_dtype(self, actual, expected):
+        if expected == "string":
+            return pd.api.types.is_string_dtype(actual)
+        elif expected == "float":
+            return pd.api.types.is_float_dtype(actual)
+        elif expected == "int":
+            return pd.api.types.is_integer_dtype(actual)
+        elif expected == "datetime":
+            return pd.api.types.is_datetime64_any_dtype(actual)
+        else:
+            return True
 
     def show(self):
         """Display the UI in the notebook."""
@@ -269,3 +331,72 @@ def crop_type_preprocess(dataset:pd.DataFrame,crop_column:str):
     print("The number of group in this dataset: ",data_crops['Crop_Group'].value_counts())
     return data_crops
     
+    
+def assign_sow_info(dataset:pd.DataFrame):
+    """
+    Assigns necessary sow information to get Season_ids in the next step
+    
+    Parameters:
+    1. Input dataframe
+    
+    Returns:
+    Dataframe with Sow_Year column and Sow_Month, Sow_Day (if Sow_Date is available)
+    
+    """
+    if "Sow_Date" in dataset.columns:
+        dataset["Sow_Year"] = dataset["Sow_Date"].dt.year.astype("Int64")
+        dataset["Sow_Month"] = dataset["Sow_Date"].dt.month.astype("Int64")
+        dataset["Sow_Day"] = dataset["Sow_Date"].dt.day.astype("Int64")
+        print("Columns 'Sow_Year', 'Sow_Month' and 'Sow_Date' assigned from 'Sow_Date'")
+        
+    else:
+        if "Sow_Year" not in dataset.columns:
+            dataset["Sow_Year"] = pd.NA
+            print("No Sow_Date or Sow_Year found. Created Sow_Year with NA")
+        else:
+            print("Sow_Year already exists. Leaving as is.")
+    
+    return dataset    
+
+def assign_est_sow_year(country:str,dataset:pd.DataFrame,season_year:int):
+    """
+    Assigns Est_Sow_Year where Sow_Year is not available (important to assign Season_id)
+    
+    Parameters: 
+    1. Country name; currently only Ukraine has separate logic
+    2. Input dataframe
+    3. The crop season 
+     
+    Returns:
+    Dataset with Est_Sow_Year column 
+    
+    """
+    
+    if "Sow_Year" not in dataset.columns:
+        raise ValueError("Required column 'Sow_Year' is missing from dataset.")
+    
+    if country == "Ukraine" and "Crop_Season" not in dataset.columns:
+        raise ValueError(
+            "Column 'Crop_Season' is required for Ukraine to assign estimated sowing year."
+        )
+    
+    dataset = dataset.copy()
+    dataset["Est_Sow_Year"] = pd.Series(
+    pd.NA, index=dataset.index, dtype="Int64"
+    )
+    mask_null = dataset["Sow_Year"].isnull()
+    
+    if (country == "Ukraine"):
+        dataset.loc[
+            mask_null & (dataset["Crop_Season"] == "Winter"),
+            "Est_Sow_Year"
+        ] = season_year - 1
+        
+        dataset.loc[
+            mask_null & (dataset["Crop_Season"] != "Winter"),
+            "Est_Sow_Year"
+        ] = season_year
+    else:
+        dataset.loc[mask_null, "Est_Sow_Year"] = season_year
+    print("Column 'Est_Sow_Year' successfully assigned")    
+    return dataset

@@ -93,6 +93,10 @@ def check_repeating_geoms_s2cell(gdf:gpd.GeoDataFrame, col_name:str, granularity
     axis=1
 )
     repeating = gdf[gdf[col_name].duplicated(keep=False)]
+    if repeating.empty:
+        print("No duplicated geoms in this dataset")
+    else:
+        print(repeating)
     print("Geom ids assigned to the geodataframe")
     print("\n")
     return repeating,gdf
